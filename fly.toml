@@ -1,0 +1,53 @@
+# fly.toml app configuration file generated for prairielearn-auth on 2023-11-09T15:19:21-08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "prairielearn-auth"
+primary_region = "sjc"
+
+[build]
+  image = "gophish/gophish:latest"
+
+[env]
+  DB_FILE_PATH = "/data/gophish.db"
+  ADMIN_USE_TLS = "false"
+  PHISH_USE_TLS = "false"
+  ADMIN_TRUSTED_ORIGINS = "prairielearn-auth.fly.dev"
+
+[[mounts]]
+  source = "gophish_data"
+  destination = "/data"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 3333
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "10s"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 80
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
